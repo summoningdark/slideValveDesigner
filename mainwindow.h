@@ -29,6 +29,7 @@ private:
     Ui::MainWindow *ui;
     SlideValveEngine *_engine;
     std::map<CycleEnum, QBrush> _regionBrush;
+    QPen _thickPen;
     bool _settingsOK;
     void squarePlotY(QCustomPlot *plot);
 };

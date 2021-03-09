@@ -1,5 +1,16 @@
 #include "slidevalveengine.h"
 
+double SVE::deg2Rad(double deg)
+{
+    return deg * M_PI / 180.0;
+}
+
+double SVE:: rad2Deg(double rad)
+{
+    return rad * 180.0 * M_1_PI;
+}
+
+
 SlideValveEngine::SlideValveEngine()
 {
     // fill in some  known good default values
@@ -123,40 +134,215 @@ double SlideValveEngine::stroke2CrankRad(double pos, bool ret)
         return stroke2CrankRad(pos);
 }
 
-std::tuple<CycleEnum, double> SlideValveEngine::crankRad2Cycle(double rad, bool ret)
+/*!
+ * Given a crank position (rad), calculates the smallest crank position > rad such that
+ * crankRad2Cycle(new) follows crankRad2Cycle(rad).
+ * \param rad crank position in radians
+ * \param ret if true calculates for return stroke
+ * \return next crank position in radians
+ */
+
+double SlideValveEngine::nextCycleRad(double rad, bool ret)
 {
-    CycleEnum cycle = CycleEnum::intake;
-    double offsetToNext = 0;
+    // get cycle region for the argument
+    CycleEnum oldCycle = crankRad2Cycle(rad, ret);
+    CycleEnum newCycle = CycleEnum::intake;
 
-    // calculate arg mod 2*Pi
-    // compare with critical points to find region
-    // calculate offset to next point
+    // get the next cycle information
+    std::array<double, 4> critP = criticalPointsRad(ret);
+    double nextPoint = 0;
+    switch(oldCycle){
+    case CycleEnum::intake:
+        newCycle = CycleEnum::expansion;
+        nextPoint = critP[1];
+        break;
+    case CycleEnum::expansion:
+        newCycle = CycleEnum::exahust;
+        nextPoint = critP[2];
+        break;
+    case CycleEnum::exahust:
+        newCycle = CycleEnum::compression;
+        nextPoint = critP[3];
+        break;
+    case CycleEnum::compression:
+        newCycle = CycleEnum::intake;
+        nextPoint = critP[0];
+        break;
+    }
 
-    return std::make_tuple(cycle, rad+ offsetToNext);
+    // estimate the next position
+    double wrappedRad = fmod(rad, 2 * M_PI);
+        if (wrappedRad < 0)
+            wrappedRad += 2 * M_PI;
+
+    double nextPos;
+    if (wrappedRad < nextPoint)
+        nextPos = rad + (nextPoint - wrappedRad);
+    else
+        nextPos = rad + (2*M_PI - wrappedRad + nextPoint);
+
+    // verify that the new position will evaluate to the next cycle
+    CycleEnum testCycle = crankRad2Cycle(nextPos, ret);
+    if (testCycle == newCycle)
+        return nextPos;
+    else if (testCycle == oldCycle)
+        while (crankRad2Cycle(nextPos, ret) != newCycle)
+            nextPos += .001;
+    else
+        throw;
+    return nextPos;
 }
 
+CycleEnum SlideValveEngine::crankRad2Cycle(double rad, bool ret)
+{
+    CycleEnum cycle = CycleEnum::intake;    
+
+    // calculate arg mod 2*Pi
+    double wrappedRad = fmod(rad, 2 * M_PI);
+        if (wrappedRad < 0)
+            wrappedRad += 2 * M_PI;
+
+    // compare with critical points to find region
+    std::array<double, 4> critP = criticalPointsRad(ret);
+    // find (crit - wrappedRad) for all crit (crit >=0 by definition)
+    std::array<double, 4> diffs;
+    for (int i=0; i<4; i++)
+        diffs[i] = critP[i] - wrappedRad;
+
+    // if any exact match choose the match
+    int startPoint = 0;
+    if (diffs[0] == 0){
+        startPoint = 0;
+    }else if (diffs[1] == 0){
+        startPoint = 1;
+    }else if (diffs[2] == 0){
+        startPoint = 2;
+    }else if (diffs[3] == 0){
+        startPoint = 3;
+    }else if (diffs[1] > 0 && diffs[1] > 0 && diffs[2] > 0 && diffs[3] > 0){ // if all diff + choose largest
+        double maxDiff = 0;
+        for (int i=0; i<4; i++){
+            if (diffs[i] > maxDiff){
+                maxDiff = diffs[i];
+                startPoint = i;
+            }
+        }
+    }else{ // if any - choose largest that is < 0
+        double maxDiff = -100;
+        for (int i=0; i<4; i++){
+            if (diffs[i] < 0 && diffs[i] > maxDiff){
+                maxDiff = diffs[i];
+                startPoint = i;
+            }
+        }
+    }
+
+    switch (startPoint){
+    case 1:
+        cycle = CycleEnum::expansion;
+        break;
+    case 2:
+        cycle = CycleEnum::exahust;
+        break;
+    case 3:
+        cycle = CycleEnum::compression;
+        break;
+    default:
+        cycle = CycleEnum::intake;
+        break;
+    }
+
+    return cycle;
+}
+
+double SlideValveEngine::crankRadInlet(bool ret)                              // returns the crank position when the steam port opens in radians. if ret is true, returns the value for the return stroke
+{
+    if (ret)
+        return M_PI - .1;
+    else
+        return 2 * M_PI - .1;
+}
+
+double SlideValveEngine::crankRadCutoff(bool ret)                             // returns the crank position when the steam port closes in radians. if ret is true, returns the value for the return stroke
+{
+    if (ret)
+        return 2 * M_PI - .7;
+    else
+        return  M_PI - .7;
+}
+
+double SlideValveEngine::crankRadRelease(bool ret)                            // returns the crank position when the exahust port opens in radians. if ret is true, returns the value for the return stroke
+{
+    if (ret)
+        return 2 * M_PI - .3;
+    else
+        return M_PI - .3;
+}
+
+double SlideValveEngine::crankRadCompression(bool ret)                        // returns the crank position when the exahust port closes in radians. if ret is true, returns the value for the return stroke
+{
+    if (ret)
+        return M_PI - .4;
+    else
+        return 2 * M_PI - .4;
+}
+
+std::array<double, 4> SlideValveEngine::criticalPointsRad(bool ret)
+{
+    std::array<double, 4> foo;
+    foo[0] = crankRadInlet(ret);
+    foo[1] = crankRadCutoff(ret);
+    foo[2] = crankRadRelease(ret);
+    foo[3] = crankRadCompression(ret);
+    return foo;
+}
 
 // ********************* degree versions of the functions *****************************
 double SlideValveEngine::crankDeg2Stroke(double deg)
-{
-    double rad = deg * 180.0 * M_1_PI;
-    return crankRad2Stroke(rad);
+{    
+    return crankRad2Stroke(SVE::deg2Rad(deg));
 }
 
 double SlideValveEngine::stroke2CrankDeg(double pos)
-{
-    double rad = stroke2CrankRad(pos);
-    return rad * 180.0 * M_1_PI;
+{    
+    return SVE::rad2Deg(stroke2CrankRad(pos));
 }
 
 double SlideValveEngine::stroke2CrankDeg(double pos, bool ret)
 {
-    double rad = stroke2CrankRad(pos, ret);
-    return rad * 180.0 * M_1_PI;
+    return SVE::rad2Deg(stroke2CrankRad(pos, ret));
 }
 
-std::tuple<CycleEnum, double> SlideValveEngine::crankDeg2Cycle(double deg, bool ret)
+double SlideValveEngine::crankDegInlet(bool ret)
+{    
+    return SVE::rad2Deg(crankRadInlet(ret));
+}
+
+double SlideValveEngine::crankDegCutoff(bool ret)
 {
-    double rad = deg * M_PI / 180.0;
-    return crankRad2Cycle(rad, ret);
+    return SVE::rad2Deg(crankRadCutoff(ret));
+}
+
+double SlideValveEngine::crankDegRelease(bool ret)
+{
+    return SVE::rad2Deg(crankRadRelease(ret));
+}
+
+double SlideValveEngine::crankDegCompression(bool ret)
+{
+    return SVE::rad2Deg(crankRadCompression(ret));
+}
+
+CycleEnum SlideValveEngine::crankDeg2Cycle(double deg, bool ret)
+{
+    return crankRad2Cycle(SVE::deg2Rad(deg), ret);
+}
+
+std::array<double, 4> SlideValveEngine::criticalPointsDeg(bool ret)
+{
+    std::array<double, 4> foo = criticalPointsRad(ret);
+    std::array<double, 4> bar;
+    for (int i=0; i<4; i++)
+        bar[i] = SVE::rad2Deg(foo[i]);
+    return bar;
 }

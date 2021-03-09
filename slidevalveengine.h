@@ -38,6 +38,11 @@ enum class CycleEnum{
     intake, expansion, exahust, compression
 };
 
+namespace SVE {
+    double rad2Deg(double rad);
+    double deg2Rad(double deg);
+}
+
 /*!
  * Holds functional parameters for a sliding valve, double acting engine and provides methods for calculating cycle information.
  */
@@ -58,6 +63,8 @@ public:
     double stroke2CrankDeg(double pos);
     double stroke2CrankDeg(double pos, bool ret);
 
+    std::array<double, 4> criticalPointsRad(bool ret);
+    std::array<double, 4> criticalPointsDeg(bool ret);
     double crankRadInlet(bool ret);                             // returns the crank position when the steam port opens in radians. if ret is true, returns the value for the return stroke
     double crankDegInlet(bool ret);
     double crankRadCutoff(bool ret);                            // returns the crank position when the steam port closes in radians. if ret is true, returns the value for the return stroke
@@ -66,14 +73,20 @@ public:
     double crankDegRelease(bool ret);
     double crankRadCompression(bool ret);                       // returns the crank position when the exahust port closes in radians. if ret is true, returns the value for the return stroke
     double crankDegCompression(bool ret);
-    std::tuple<CycleEnum, double> crankRad2Cycle(double rad, bool ret);  // returns the cycle region corresponding to the crank position and the next crank position where the region ends. if ret is true, calculates for return stroke
-    std::tuple<CycleEnum, double> crankDeg2Cycle(double deg, bool ret);  // returns the cycle region corresponding to the crank position and the next crank position where the region ends. if ret is true, calculates for return stroke
+
+    // returns the cycle region corresponding to the crank position. if ret is true, calculates for return stroke.
+    CycleEnum crankRad2Cycle(double rad, bool ret);
+    CycleEnum crankDeg2Cycle(double deg, bool ret);
+
+    double nextCycleRad(double rad, bool ret);                  // returns the first crank position > rad which is in the next cycle region
+    double nextCycleDeg(double deg, bool ret);                  // returns the first crank position > deg which is in the next cycle region
+
     double inletVolume(bool ret);                               // returns the volume swept by the piston during inlet. if ret is true gives value for return stroke
     double expansionVolume(bool ret);
     double compressionVolume(bool ret);
 
 private:
-    s_engineParams _engineParams;
+    s_engineParams _engineParams;    
 };
 
 #endif // SLIDEVALVEENGINE_H
