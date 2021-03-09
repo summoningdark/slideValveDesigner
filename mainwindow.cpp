@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     // coloring brushes for cycle regions
     _regionBrush[CycleEnum::intake] = QBrush(QColor(0, 255, 0, 255));       // color for intake
     _regionBrush[CycleEnum::expansion] = QBrush(QColor(100, 255, 100, 255));   // color for expansion
-    _regionBrush[CycleEnum::exahust] = QBrush(QColor(0, 0, 255, 255));       // color for exahust
+    _regionBrush[CycleEnum::exahust] = QBrush(QColor(100, 100, 255, 255));       // color for exahust
     _regionBrush[CycleEnum::compression] = QBrush(QColor(255, 0, 0, 255));       // color for compression
 
     _thickPen = QPen(Qt::black, 3);
@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::drawCycleDiagram()
 {
     ui->cyclePlot->clearGraphs();
-    ui-> cyclePlot->clearItems();
+    ui->cyclePlot->clearItems();
 
     if (_settingsOK)
     {
@@ -40,8 +40,8 @@ void MainWindow::drawCycleDiagram()
         // draw shaded regions from <stroke> to the X-Axis for the return stroke regions
         // these will be over-drawn by the position curve for the forward stroke
         int graphIndex = -1;            // for counting graphs
-        double crankPos = -M_PI;
-        double crankStop = 3 * M_PI;
+        double crankPos = -180;
+        double crankStop = 440;
 
         while (crankPos < crankStop)
         {
@@ -49,46 +49,43 @@ void MainWindow::drawCycleDiagram()
             ui->cyclePlot->addGraph();      // add graph
             graphIndex++;                   // count it
             // set the fill color based on region
-            CycleEnum cycle = _engine->crankRad2Cycle(crankPos, true);
-            double nextCrankPos = _engine-> nextCycleRad(crankPos, true);
+            CycleEnum cycle = _engine->crank2Cycle(crankPos, true);
+            double nextCrankPos = _engine-> nextCycle(crankPos, true);
             if (nextCrankPos > crankStop)
                nextCrankPos = crankStop;
             ui->cyclePlot->graph(graphIndex)->setBrush(_regionBrush[cycle]);
             QVector<double> rX(2), rY(2);
-            rX[0] = SVE::rad2Deg(crankPos);
+            rX[0] = crankPos;
             rY[0] = stroke;
-            rX[1] = SVE::rad2Deg(nextCrankPos);
+            rX[1] = nextCrankPos;
             rY[1] = stroke;
             ui->cyclePlot->graph(graphIndex)->setData(rX, rY);
             crankPos = nextCrankPos;
-        }
+        }       
 
-        ui->cyclePlot->addLayer("fStroke");         // add a layer so the next graph go over the previous ones
-        ui->cyclePlot->setCurrentLayer("fStroke");  // set the layer as active
-
-        crankPos = -M_PI;
+        crankPos = -180;
         while (crankPos < crankStop)
         {
             // make graph from crank position to next critical point (or end whichever comes first)
             ui->cyclePlot->addGraph();      // add graph
             graphIndex++;                   // count it
             // set the fill color based on region
-            CycleEnum cycle = _engine->crankRad2Cycle(crankPos, false);
-            double nextCrankPos = _engine->nextCycleRad(crankPos, false);
+            CycleEnum cycle = _engine->crank2Cycle(crankPos, false);
+            double nextCrankPos = _engine->nextCycle(crankPos, false);
             if (nextCrankPos > crankStop)
                 nextCrankPos = crankStop;
             ui->cyclePlot->graph(graphIndex)->setPen(_thickPen);
             ui->cyclePlot->graph(graphIndex)->setBrush(_regionBrush[cycle]);         
             QVector<double> fX, fY;
-            fX.append(SVE::rad2Deg(crankPos));
-            fY.append(_engine->crankRad2Stroke(crankPos));
+            fX.append(crankPos);
+            fY.append(_engine->crank2Stroke(crankPos));
             for (int step=0; crankPos < nextCrankPos; step++)
             {
                 crankPos += .01;                // step the position
                 if (crankPos > nextCrankPos)    // check for overshoot
                     crankPos = nextCrankPos;
-                fX.append(SVE::rad2Deg(crankPos));
-                fY.append(_engine->crankRad2Stroke(crankPos));
+                fX.append(crankPos);
+                fY.append(_engine->crank2Stroke(crankPos));
             }
             ui->cyclePlot->graph(graphIndex)->setData(fX, fY);
         }
@@ -117,7 +114,7 @@ void MainWindow::updateEngineSettings()
     newSettings.conRod = ui->conRod->value();
     newSettings.valveTravel = ui->valveTravel->value();
     newSettings.valveConRod = ui->valveConRod->value();
-    newSettings.eccentricAdvance = ui->eccentricAdvance->value() * M_PI / 180.0;
+    newSettings.eccentricAdvance = SVE::deg2Rad(ui->eccentricAdvance->value());
     newSettings.valvePorts.topPort[0] = (ui->steamPortSpace->value() - ui->steamPortWidth->value()) / 2;
     newSettings.valvePorts.botPort[0] = -(ui->steamPortSpace->value() - ui->steamPortWidth->value()) / 2;
     newSettings.valvePorts.exPort[0] = -ui->exahustPortWidth->value() / 2;
