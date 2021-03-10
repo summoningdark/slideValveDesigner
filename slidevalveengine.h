@@ -4,17 +4,19 @@
 #include <tuple>
 #include <cmath>
 
+
+// valve measurements are from neutral position. neutral is positive direction form valve TDC
 typedef struct
 {
-    double topPort[2];      // distance from valve neutral position to the lower edge [0] and upper edge[1] of the top steam port ( both positive )
-    double botPort[2];      // distance from valve neutral position to the lower edge [0] and upper edge[1] of the top steam port ( both negative)
-    double exPort[2];       // distance from valve neutral position to the lower edge [0] and upper edge[1] of the exahust port ( lower negative, upper positive)
+    double topPort[2];      // distance from valve neutral position to the lower edge [0] and upper edge[1] of the top steam port ( both negative, closer to valve TDC than neutral )
+    double botPort[2];      // distance from valve neutral position to the lower edge [0] and upper edge[1] of the top steam port ( both positive, farther from valve TDC than neutral)
+    double exPort[2];       // distance from valve neutral position to the lower edge [0] and upper edge[1] of the exahust port ( lower positive, upper negative)
 } s_valvePorts;
 
 typedef struct
 {
-    double topLand[2];      // distance from slide center to the top land edges [0]= inside edge, [1] = outside edge (both positive)
-    double botLand[2];      // distance from slide center to the bottom land edges [0]= inside edge, [1] = outside edge (both negative)
+    double topLand[2];      // distance from slide center to the top land edges [0]= inside edge, [1] = outside edge (both negative)
+    double botLand[2];      // distance from slide center to the bottom land edges [0]= inside edge, [1] = outside edge (both positive)
 } s_dValve;
 
 typedef struct

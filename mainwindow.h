@@ -19,18 +19,19 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    private slots:        
-        void drawCycleDiagram();
+    private slots:                
         void updateEngineSettings();
+        void drawValveDiagram();
         void updateAnimationDiagram();
         void setAnimationSlider();
+        void squarePlotY(QCustomPlot *plot);
 
 private:
     Ui::MainWindow *ui;
     SlideValveEngine *_engine;
+    void drawCycleDiagram();
     std::map<CycleEnum, QBrush> _regionBrush;
     QPen _thickPen;
-    bool _settingsOK;
-    void squarePlotY(QCustomPlot *plot);
+    bool _settingsOK;    
 };
 #endif // MAINWINDOW_H

@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_4">
-    <item row="1" column="0" colspan="2">
+    <item row="2" column="0" colspan="2">
      <widget class="QGroupBox" name="groupBox_3">
       <property name="title">
        <string>Diagrams</string>
@@ -24,15 +24,44 @@
        <item row="0" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
+         <widget class="QWidget" name="tab_4">
+          <attribute name="title">
+           <string>Cycle</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="1" column="0">
+            <widget class="QCustomPlot" name="cyclePlot" native="true"/>
+           </item>
+          </layout>
+         </widget>
          <widget class="QWidget" name="tab">
           <attribute name="title">
-           <string>Crank</string>
+           <string>Valve</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_8">
+           <item row="1" column="0">
+            <widget class="myCustomPlot" name="valvePlot" native="true"/>
+           </item>
            <item row="0" column="0">
-            <widget class="QCustomPlot" name="crankCutoffPlot" native="true"/>
+            <widget class="QComboBox" name="valvePlotSlidePosition">
+             <item>
+              <property name="text">
+               <string>Neutral</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Valve TDC</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Valve BDC</string>
+              </property>
+             </item>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -74,16 +103,6 @@
               <enum>Qt::Horizontal</enum>
              </property>
             </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="tab_4">
-          <attribute name="title">
-           <string>Cycle</string>
-          </attribute>
-          <layout class="QGridLayout" name="gridLayout_9">
-           <item row="0" column="0">
-            <widget class="QCustomPlot" name="cyclePlot" native="true"/>
            </item>
           </layout>
          </widget>
@@ -361,6 +380,12 @@
    <header>qcustomplot.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>myCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>mycustomplot.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
@@ -387,8 +412,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>342</x>
-     <y>85</y>
+     <x>284</x>
+     <y>98</y>
     </hint>
     <hint type="destinationlabel">
      <x>368</x>
@@ -403,8 +428,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>390</x>
-     <y>123</y>
+     <x>284</x>
+     <y>124</y>
     </hint>
     <hint type="destinationlabel">
      <x>508</x>
@@ -419,8 +444,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>360</x>
-     <y>137</y>
+     <x>284</x>
+     <y>150</y>
     </hint>
     <hint type="destinationlabel">
      <x>644</x>
@@ -435,8 +460,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>318</x>
-     <y>171</y>
+     <x>284</x>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel">
      <x>638</x>
@@ -451,8 +476,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>714</x>
-     <y>59</y>
+     <x>556</x>
+     <y>72</y>
     </hint>
     <hint type="destinationlabel">
      <x>706</x>
@@ -467,8 +492,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>690</x>
-     <y>91</y>
+     <x>556</x>
+     <y>98</y>
     </hint>
     <hint type="destinationlabel">
      <x>750</x>
@@ -483,8 +508,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>764</x>
-     <y>123</y>
+     <x>556</x>
+     <y>124</y>
     </hint>
     <hint type="destinationlabel">
      <x>520</x>
@@ -499,8 +524,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>658</x>
-     <y>139</y>
+     <x>556</x>
+     <y>150</y>
     </hint>
     <hint type="destinationlabel">
      <x>226</x>
@@ -515,12 +540,28 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>674</x>
-     <y>165</y>
+     <x>556</x>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
      <y>29</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>valvePlotSlidePosition</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>drawValveDiagram()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>422</x>
+     <y>256</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>423</x>
+     <y>326</y>
     </hint>
    </hints>
   </connection>
@@ -530,5 +571,6 @@
   <slot>setAnimationSlider()</slot>
   <slot>drawCycleDiagram()</slot>
   <slot>updateEngineSettings()</slot>
+  <slot>drawValveDiagram()</slot>
  </slots>
 </ui>

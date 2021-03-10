@@ -12,12 +12,14 @@ SOURCES += \
     bilgramdialog.cpp \
     main.cpp \
     mainwindow.cpp \
+    mycustomplot.cpp \
     qcustomplot.cpp \
     slidevalveengine.cpp
 
 HEADERS += \
     bilgramdialog.h \
     mainwindow.h \
+    mycustomplot.h \
     qcustomplot.h \
     slidevalveengine.h
 

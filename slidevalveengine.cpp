@@ -90,16 +90,16 @@ SlideValveEngine::SlideValveEngine()
     _engineParams.valveTravel = 2.282;
     _engineParams.valveConRod = 22;
     _engineParams.eccentricAdvance = 1.57;
-    _engineParams.valvePorts.topPort[0] = 1.07;
-    _engineParams.valvePorts.topPort[1] = 1.725;
-    _engineParams.valvePorts.botPort[0] = -1.07;
-    _engineParams.valvePorts.botPort[1] = -1.725;
-    _engineParams.valvePorts.exPort[0] = -.55;
-    _engineParams.valvePorts.exPort[1] = .55;
-    _engineParams.valveSlide.topLand[0] = 1.06;
-    _engineParams.valveSlide.topLand[1] = 2.33;
-    _engineParams.valveSlide.botLand[0] = -.9;
-    _engineParams.valveSlide.botLand[1] = -2.33;
+    _engineParams.valvePorts.topPort[0] = -1.07;
+    _engineParams.valvePorts.topPort[1] = -1.725;
+    _engineParams.valvePorts.botPort[0] = 1.07;
+    _engineParams.valvePorts.botPort[1] = 1.725;
+    _engineParams.valvePorts.exPort[0] = .55;
+    _engineParams.valvePorts.exPort[1] = -.55;
+    _engineParams.valveSlide.topLand[0] = -1.06;
+    _engineParams.valveSlide.topLand[1] = -2.33;
+    _engineParams.valveSlide.botLand[0] = .9;
+    _engineParams.valveSlide.botLand[1] = 2.33;
 
     calcCriticalPoints(_engineParams);
 }
@@ -119,16 +119,16 @@ SlideValveEngine::SlideValveEngine(s_engineParams params)
         _engineParams.valveTravel = 2.282;
         _engineParams.valveConRod = 22;
         _engineParams.eccentricAdvance = 1.57;
-        _engineParams.valvePorts.topPort[0] = 1.07;
-        _engineParams.valvePorts.topPort[1] = 1.725;
-        _engineParams.valvePorts.botPort[0] = -1.07;
-        _engineParams.valvePorts.botPort[1] = -1.725;
+        _engineParams.valvePorts.topPort[0] = -1.07;
+        _engineParams.valvePorts.topPort[1] = -1.725;
+        _engineParams.valvePorts.botPort[0] = 1.07;
+        _engineParams.valvePorts.botPort[1] = 1.725;
         _engineParams.valvePorts.exPort[0] = -.55;
-        _engineParams.valvePorts.exPort[1] = .55;
-        _engineParams.valveSlide.topLand[0] = 1.06;
-        _engineParams.valveSlide.topLand[1] = 2.33;
-        _engineParams.valveSlide.botLand[0] = -.9;
-        _engineParams.valveSlide.botLand[1] = -2.33;
+        _engineParams.valvePorts.exPort[1] = -.55;
+        _engineParams.valveSlide.topLand[0] = -1.06;
+        _engineParams.valveSlide.topLand[1] = -2.33;
+        _engineParams.valveSlide.botLand[0] = .9;
+        _engineParams.valveSlide.botLand[1] = 2.33;
         calcCriticalPoints(_engineParams);
     }
 
