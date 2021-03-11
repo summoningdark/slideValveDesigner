@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->valvePlot->setInteraction(QCP::iRangeDrag, true);
     ui->valvePlot->setInteraction(QCP::iRangeZoom, true);
+    ui->valvePlot->xAxis->setLabel("Valve Position");
 
     connect(ui->valvePlot, SIGNAL(Resized(QCustomPlot*)), this, SLOT(squarePlotY(QCustomPlot*)));
 
@@ -146,7 +147,7 @@ void MainWindow::drawValveDiagram()
        ui->valvePlot->graph(3)->setBrush(QBrush(QColor(0,0,0,255)));
 
        // make path for the slide valve
-       QVector<double> slideValveX(8), slideValveY(8);
+       QVector<double> slideValveX(9), slideValveY(9);
 
       slideValveX[0] = params.valveSlide.topLand[1];
       slideValveY[0] = 0;
@@ -164,6 +165,8 @@ void MainWindow::drawValveDiagram()
       slideValveY[6] = portsY;
       slideValveX[7] = params.valveSlide.topLand[0];
       slideValveY[7] = 0;
+      slideValveX[8] = params.valveSlide.topLand[1];
+      slideValveY[8] = 0;
 
       // move slide to position
       double shift = 0;
