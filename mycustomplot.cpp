@@ -4,5 +4,5 @@
 void myCustomPlot::resizeEvent (QResizeEvent *event)
 {
     QCustomPlot::resizeEvent(event);
-    emit Resized(this);
+    emit Resized(this, event->size());
 };

@@ -11,7 +11,7 @@ protected:
     virtual void resizeEvent (QResizeEvent *event);
 
 signals:
-    void Resized(QCustomPlot *self);
+    void Resized(QCustomPlot *self, QSize s);
 };
 
 #endif // MYCUSTOMPLOT_H

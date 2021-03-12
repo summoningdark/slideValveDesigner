@@ -89,7 +89,7 @@ SlideValveEngine::SlideValveEngine()
     _engineParams.conRod = 22.375;
     _engineParams.valveTravel = 2.282;
     _engineParams.valveConRod = 22;
-    _engineParams.eccentricAdvance = 1.57;
+    _engineParams.eccentricAdvance = 120.0;
     _engineParams.valvePorts.topPort[0] = -1.07;
     _engineParams.valvePorts.topPort[1] = -1.725;
     _engineParams.valvePorts.botPort[0] = 1.07;
@@ -118,7 +118,7 @@ SlideValveEngine::SlideValveEngine(s_engineParams params)
         _engineParams.conRod = 22.375;
         _engineParams.valveTravel = 2.282;
         _engineParams.valveConRod = 22;
-        _engineParams.eccentricAdvance = 1.57;
+        _engineParams.eccentricAdvance = 120.0;
         _engineParams.valvePorts.topPort[0] = -1.07;
         _engineParams.valvePorts.topPort[1] = -1.725;
         _engineParams.valvePorts.botPort[0] = 1.07;
@@ -166,16 +166,52 @@ ErrorEnum SlideValveEngine::setEngineParams(s_engineParams newParams)
 }
 
 ErrorEnum SlideValveEngine::calcCriticalPoints(s_engineParams params){
-    _returnCriticalPoints[0] = 178;
-    _returnCriticalPoints[1] = 300;
-    _returnCriticalPoints[2] = 330;
-    _returnCriticalPoints[3] = 160;
+    double offsetFIO;                 // linear position offset from valve neutral for forward intake/cutoff
+    double offsetFRC;                 // linear position offset from valve neutral for forward release/compression
+    double offsetRIO;                 // linear position offset from valve neutral for reverse intake/cutoff
+    double offsetRRC;                 // linear position offset from valve neutral for reverse release/compression
+    double ecc[8];
 
+    // calculate offsets
+    offsetFIO = params.valvePorts.topPort[1] - params.valveSlide.topLand[1];
+    offsetFRC = params.valvePorts.topPort[0] - params.valveSlide.topLand[0];
+    offsetRIO = params.valvePorts.botPort[1] - params.valveSlide.botLand[1];
+    offsetRRC = params.valvePorts.botPort[0] - params.valveSlide.botLand[0];
+
+
+    // calculate points
+    ecc[0] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetFIO, params.valveTravel, params.valveConRod, false), -params.eccentricAdvance);
+    ecc[1] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetFIO, params.valveTravel, params.valveConRod, true), -params.eccentricAdvance);
+    ecc[2] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetFRC, params.valveTravel, params.valveConRod, true), -params.eccentricAdvance);
+    ecc[3] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetFRC, params.valveTravel, params.valveConRod, false), -params.eccentricAdvance);
+    ecc[4] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetRIO, params.valveTravel, params.valveConRod, true), -params.eccentricAdvance);
+    ecc[5] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetRIO, params.valveTravel, params.valveConRod, false), -params.eccentricAdvance);
+    ecc[6] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetRRC, params.valveTravel, params.valveConRod, false), -params.eccentricAdvance);
+    ecc[7] = SVE::addAngles(SVE::stroke2Crank(params.valveTravel/2 + offsetRRC, params.valveTravel, params.valveConRod, true), -params.eccentricAdvance);
+
+    _criticalPoints[0] = ecc[0];
+    _criticalPoints[1] = ecc[1];
+    _criticalPoints[2] = ecc[2];
+    _criticalPoints[3] = ecc[3];
+
+    _criticalPoints[4] = ecc[4];
+    _criticalPoints[5] = ecc[5];
+    _criticalPoints[6] = ecc[6];
+    _criticalPoints[7] = ecc[7];
+
+
+    // for testing
+/*
     _forwardCriticalPoints[0] = 358;
     _forwardCriticalPoints[1] = 120;
     _forwardCriticalPoints[2] = 150;
     _forwardCriticalPoints[3] = 340;
 
+    _returnCriticalPoints[0] = 178;
+    _returnCriticalPoints[1] = 300;
+    _returnCriticalPoints[2] = 330;
+    _returnCriticalPoints[3] = 160;
+*/
     return ErrorEnum::none;
 
 }
@@ -221,6 +257,8 @@ double SlideValveEngine::crank2ValvePos(double deg)
 
 double SlideValveEngine::nextCycle(double deg, bool ret)
 {
+    return 0;
+/*
     // get cycle region for the argument
     CycleEnum oldCycle = crank2Cycle(deg, ret);
     CycleEnum newCycle = CycleEnum::intake;
@@ -266,12 +304,14 @@ double SlideValveEngine::nextCycle(double deg, bool ret)
     else                                            // something went really wrong
         throw;
     return nextPos;
+*/
 }
 
 CycleEnum SlideValveEngine::crank2Cycle(double deg, bool ret)
 {
     CycleEnum cycle = CycleEnum::intake;    
-
+    return cycle;
+/*
     // calculate wrapped angle
     double wrapped = SVE::addAngles(deg, 0);
 
@@ -301,7 +341,7 @@ CycleEnum SlideValveEngine::crank2Cycle(double deg, bool ret)
             }
         }
     }else{ // if any - choose largest that is < 0
-        double maxDiff = -100;
+        double maxDiff = -1000;
         for (int i=0; i<4; i++){
             if (diffs[i] < 0 && diffs[i] > maxDiff){
                 maxDiff = diffs[i];
@@ -326,46 +366,44 @@ CycleEnum SlideValveEngine::crank2Cycle(double deg, bool ret)
     }
 
     return cycle;
+*/
 }
 
 double SlideValveEngine::crankInlet(bool ret)                              // returns the crank position when the steam port opens in radians. if ret is true, returns the value for the return stroke
 {
     if (ret)
-        return _returnCriticalPoints[0];
+        return _criticalPoints[0];
     else
-        return _forwardCriticalPoints[0];
+        return _criticalPoints[0];
 }
 
 double SlideValveEngine::crankCutoff(bool ret)                             // returns the crank position when the steam port closes in radians. if ret is true, returns the value for the return stroke
 {
     if (ret)
-        return _returnCriticalPoints[1];
+        return _criticalPoints[1];
     else
-        return _forwardCriticalPoints[1];
+        return _criticalPoints[1];
 }
 
 double SlideValveEngine::crankRelease(bool ret)                            // returns the crank position when the exahust port opens in radians. if ret is true, returns the value for the return stroke
 {
     if (ret)
-        return _returnCriticalPoints[2];
+        return _criticalPoints[2];
     else
-        return _forwardCriticalPoints[2];
+        return _criticalPoints[2];
 }
 
 double SlideValveEngine::crankCompression(bool ret)                        // returns the crank position when the exahust port closes in radians. if ret is true, returns the value for the return stroke
 {
     if (ret)
-        return _returnCriticalPoints[3];
+        return _criticalPoints[3];
     else
-        return _forwardCriticalPoints[3];
+        return _criticalPoints[3];
 }
 
-std::array<double, 4> SlideValveEngine::criticalPoints(bool ret)
+std::array<double, 8> SlideValveEngine::criticalPoints()
 {
-    std::array<double, 4> foo;
-    if (ret)
-        std::copy(std::begin(_returnCriticalPoints), std::end(_returnCriticalPoints), std::begin(foo));
-    else
-        std::copy(std::begin(_forwardCriticalPoints), std::end(_forwardCriticalPoints), std::begin(foo));
+    std::array<double, 8> foo;
+    std::copy(std::begin(_criticalPoints), std::end(_criticalPoints), std::begin(foo));
     return foo;
 }

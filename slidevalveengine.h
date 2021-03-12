@@ -61,7 +61,7 @@ public:
     ErrorEnum setEngineParams(s_engineParams newParams);        // Validates the new parameters, and only sets them if they are ok
     s_engineParams getEngineParams();    
 
-    std::array<double, 4> criticalPoints(bool ret);
+    std::array<double, 8> criticalPoints();
 
     double crankInlet(bool ret);
     double crankCutoff(bool ret);
@@ -86,12 +86,11 @@ public:
     double compressionVolume(bool ret);
 
 private:
-    s_engineParams _engineParams;
+    s_engineParams _engineParams;    
     // the critical points only change when engine parameters change. no need to calculate them every time
     ErrorEnum calcCriticalPoints(s_engineParams params);    // uses passed in engine parameters, if no error is encountered, updates the internal critical point values
     ErrorEnum validateSettings(s_engineParams params);      // checks engine parameters for serious errors (like con rod shorter than stroke)
-    double _forwardCriticalPoints[4];
-    double _returnCriticalPoints[4];
+    double _criticalPoints[8];
     double _forwardValveNeutral;                            // angular position of the eccentric when the valve is in the neutral position (1/2 its total travel)
     double _returnValveNeutral;                            // angular position of the eccentric when the valve is in the neutral position (1/2 its total travel)
 };

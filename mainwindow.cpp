@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     _engine = new SlideValveEngine();
+    currentCrank_ = 0;
 
     // coloring brushes for cycle regions
     _regionBrush[CycleEnum::intake] = QBrush(QColor(0, 255, 0, 255));       // color for intake
@@ -28,18 +29,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->valvePlot->setInteraction(QCP::iRangeZoom, true);
     ui->valvePlot->xAxis->setLabel("Valve Position");
 
-    connect(ui->valvePlot, SIGNAL(Resized(QCustomPlot*)), this, SLOT(squarePlotY(QCustomPlot*)));
+    connect(ui->valvePlot, SIGNAL(Resized(QCustomPlot*, QSize)), this, SLOT(squarePlot(QCustomPlot*, QSize)));
 
     drawCycleDiagram();
     drawValveDiagram();
-    updateAnimationDiagram();
 }
 
 void MainWindow::drawCycleDiagram()
 {
     ui->cyclePlot->clearGraphs();
     ui->cyclePlot->clearItems();
-
+    return;
     if (_settingsOK)
     {
         double stroke = _engine->getEngineParams().stroke;        
@@ -113,110 +113,80 @@ void MainWindow::drawValveDiagram()
 
     if (_settingsOK)
     {
-       s_engineParams params = _engine->getEngineParams();
-       //make valve bridge blocks 1/4 total valve travel
-       double portsY = params.valveTravel / 4;
-       double portsX[2] = {params.valvePorts.botPort[1] + params.valveTravel, params.valvePorts.topPort[1] - params.valveTravel};
-       QVector<double> fTermX(2), fBridgeX(2), rBridgeX(2), rTermX(2), Y(2);
-       Y[0] = -portsY;
-       Y[1] = -portsY;
-       fTermX[0] = portsX[1]; // make nice and far from center
-       fTermX[1] = params.valvePorts.topPort[1];
+       // need some values for offsets etc
+       double stroke = _engine->crank2Stroke(currentCrank_);
+       double valvePos = _engine->crank2ValvePos(currentCrank_);
 
-       fBridgeX[0] = params.valvePorts.topPort[0];
-       fBridgeX[1] = params.valvePorts.exPort[1];
+       // draw cylinder1
+       QCPCurve *cylinder1 = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+       cylinder1->data()->set(drawCylinder1());
+       cylinder1->setBrush(QBrush(QColor(0,0,0,255)));
 
-       rBridgeX[0] = params.valvePorts.exPort[0];
-       rBridgeX[1] = params.valvePorts.botPort[0];
+       QCPCurve *forwardShade = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+       forwardShade->data()->set(drawForwardShade(stroke));
+       forwardShade->setBrush(_regionBrush[_engine->crank2Cycle(currentCrank_, false)]);
+       forwardShade->setPen(QPen(QColor(0,0,0,0)));
 
-       rTermX[0] = params.valvePorts.botPort[1];
-       rTermX[1] = portsX[0];
+       QCPCurve *reverseShade = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+       reverseShade->data()->set(drawReverseShade(stroke));
+       reverseShade->setBrush(_regionBrush[_engine->crank2Cycle(currentCrank_, true)]);
+       reverseShade->setPen(QPen(QColor(0,0,0,0)));
 
-       ui->valvePlot->addGraph();
-       ui->valvePlot->addGraph();
-       ui->valvePlot->addGraph();
-       ui->valvePlot->addGraph();
-       ui->valvePlot->graph(0)->setData(fTermX, Y);
-       ui->valvePlot->graph(1)->setData(fBridgeX, Y);
-       ui->valvePlot->graph(2)->setData(rBridgeX, Y);
-       ui->valvePlot->graph(3)->setData(rTermX, Y);
+       QCPCurve *piston = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+       piston->data()->set(drawPiston(stroke));
+       piston->setBrush(QBrush(QColor(150,150,150,255)));
 
-       ui->valvePlot->graph(0)->setBrush(QBrush(QColor(0,0,0,255)));
-       ui->valvePlot->graph(1)->setBrush(QBrush(QColor(0,0,0,255)));
-       ui->valvePlot->graph(2)->setBrush(QBrush(QColor(0,0,0,255)));
-       ui->valvePlot->graph(3)->setBrush(QBrush(QColor(0,0,0,255)));
+       QCPCurve *steamChestShade = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+       steamChestShade->data()->set(drawSteamChestShade());
+       steamChestShade->setBrush(_regionBrush[CycleEnum::intake]);  // steam chest is always full of full pressure steam
+       steamChestShade->setPen(QPen(QColor(0,0,0,0)));
 
-       // make path for the slide valve
-       QVector<double> slideValveX(9), slideValveY(9);
-
-      slideValveX[0] = params.valveSlide.topLand[1];
-      slideValveY[0] = 0;
-      slideValveX[1] = params.valveSlide.topLand[1];
-      slideValveY[1] = 2*portsY;
-      slideValveX[2] = params.valveSlide.botLand[1];
-      slideValveY[2] = 2*portsY;
-      slideValveX[3] = params.valveSlide.botLand[1];
-      slideValveY[3] = 0;
-      slideValveX[4] = params.valveSlide.botLand[0];
-      slideValveY[4] = 0;
-      slideValveX[5] = params.valveSlide.botLand[0];
-      slideValveY[5] = portsY;
-      slideValveX[6] = params.valveSlide.topLand[0];
-      slideValveY[6] = portsY;
-      slideValveX[7] = params.valveSlide.topLand[0];
-      slideValveY[7] = 0;
-      slideValveX[8] = params.valveSlide.topLand[1];
-      slideValveY[8] = 0;
-
-      // move slide to position
-      double shift = 0;
-      if (ui->valvePlotSlidePosition->currentIndex() == 1)
-          shift = -params.valveTravel/2.0;
-      else if (ui->valvePlotSlidePosition->currentIndex() == 2)
-          shift = params.valveTravel/2.0;
-      for (int i=0; i<8; i++){
-          slideValveX[i] += shift;
-      }
+       QCPCurve *exahustShade = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+       exahustShade->data()->set(drawExahustShade());
+       exahustShade->setBrush(_regionBrush[CycleEnum::exahust]);  // steam chest is always full of full pressure steam
+       exahustShade->setPen(QPen(QColor(0,0,0,0)));
 
       // draw slide valve curve
       QCPCurve *slideValve = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
-      slideValve->setData(slideValveX, slideValveY);
+      slideValve->data()->set(drawSlide(valvePos));
       slideValve->setBrush(QBrush(QColor(150,150,150,255)));
 
-      ui->valvePlot->xAxis->setRange(portsX[1]-.25*params.valveTravel, portsX[0] +.25*params.valveTravel);
-      ui->valvePlot->yAxis->setRange(-portsY, 2*portsY);
+      QCPCurve *valveShade = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+      valveShade->data()->set(drawValveShade(valvePos));
+      valveShade->setBrush(_regionBrush[CycleEnum::exahust]);
+      valveShade->setPen(QPen(QColor(0,0,0,0)));
+
+      // draw cylinder2
+      QCPCurve *cylinder2 = new QCPCurve(ui->valvePlot->xAxis, ui->valvePlot->yAxis);
+      cylinder2->data()->set(drawCylinder2());
+      cylinder2->setBrush(QBrush(QColor(0,0,0,255)));
     }
     else
     {
         // todo put text on plot indicating invalid settings
     }
     ui->valvePlot->replot();
-    squarePlotY(ui->valvePlot);
-}
-
-void MainWindow::updateAnimationDiagram()
-{
-
+    squarePlot(ui->valvePlot, ui->valvePlot->size());
 }
 
 void MainWindow::updateEngineSettings()
 {
 
     s_engineParams newSettings;
-    newSettings.bore = 1;
+    newSettings.bore = ui->bore->value();
     newSettings.stroke = ui->stroke->value();
     newSettings.conRod = ui->conRod->value();
     newSettings.valveTravel = ui->valveTravel->value();
     newSettings.valveConRod = ui->valveConRod->value();
-    newSettings.eccentricAdvance = SVE::deg2Rad(ui->eccentricAdvance->value());
+    newSettings.eccentricAdvance = ui->eccentricAdvance->value();
     newSettings.valvePorts.topPort[0]  = -(ui->steamPortSpace->value() - ui->steamPortWidth->value()) / 2;
     newSettings.valvePorts.botPort[0] = (ui->steamPortSpace->value() - ui->steamPortWidth->value()) / 2;
     newSettings.valvePorts.exPort[0] = ui->exahustPortWidth->value() / 2;
     newSettings.valvePorts.topPort[1] = -(ui->steamPortSpace->value() + ui->steamPortWidth->value()) / 2;
     newSettings.valvePorts.botPort[1] = (ui->steamPortSpace->value() + ui->steamPortWidth->value()) / 2;
     newSettings.valvePorts.exPort[1] = -ui->exahustPortWidth->value() / 2;
-    newSettings.valveSlide.topLand[0] = -ui->valveWidth->value()/2 - ui->valveTopLand->value();
-    newSettings.valveSlide.botLand[0] = (ui->valveWidth->value()/2) + ui->valveBottomLand->value();;
+    newSettings.valveSlide.topLand[0] = -ui->valveWidth->value()/2 + ui->valveTopLand->value();
+    newSettings.valveSlide.botLand[0] = (ui->valveWidth->value()/2) - ui->valveBottomLand->value();;
     newSettings.valveSlide.topLand[1] = -ui->valveWidth->value()/2;
     newSettings.valveSlide.botLand[1] = (ui->valveWidth->value()/2);
 
@@ -232,17 +202,39 @@ void MainWindow::updateEngineSettings()
     }
     drawCycleDiagram();
     drawValveDiagram();
-    updateAnimationDiagram();
 }
 
-void MainWindow::setAnimationSlider()
+void MainWindow::setAnimationSlider(double deg)
 {
-    updateAnimationDiagram();
+    ui->animationSlider->blockSignals(true);
+    // set to closest integer degree
+    ui->animationSlider->setValue(std::round(SVE::addAngles(deg, 0)));
+    ui->animationSlider->blockSignals(false);
 }
 
-void MainWindow::squarePlotY(QCustomPlot *plot)
+void MainWindow::sliderChanged(int value)
 {
-    plot->yAxis->setScaleRatio(plot->xAxis,1.0);
+    ui->criticalPointSelect->blockSignals(true);
+    ui->criticalPointSelect->setCurrentIndex(-1);
+    ui->criticalPointSelect->blockSignals(false);
+    currentCrank_ = (double)value;
+    ui->currentAngle->setText(QString::number(currentCrank_));
+    drawValveDiagram();
+}
+
+void MainWindow::setCriticalPoint(int value)
+{
+    currentCrank_ = _engine->criticalPoints()[value];
+    setAnimationSlider(currentCrank_);
+    drawValveDiagram();
+}
+
+void MainWindow::squarePlot(QCustomPlot *plot, QSize s)
+{
+    if (s.height() > s.width())
+        plot->xAxis->setScaleRatio(plot->yAxis,1.0);
+    else
+        plot->yAxis->setScaleRatio(plot->xAxis,1.0);
     plot->replot();
 }
 
@@ -251,3 +243,199 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+QCPDataContainer<QCPCurveData> MainWindow::drawSlide(double offset){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double portsY = params.valveTravel / 4;
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.topLand[1], 0));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.topLand[1], 2*portsY));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.botLand[1], 2*portsY));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.botLand[1], 0));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.botLand[0], 0));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.botLand[0], portsY));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.topLand[0], portsY));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.topLand[0], 0));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.topLand[1], 0));
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawCylinder1(){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double piston = params.stroke / 10;                       // value to use for the piston width/piston rod
+    double valveHeight = params.valveTravel/4;
+    double outsideEdge = piston + (params.stroke + piston)/2;
+    double insideEdge = outsideEdge - piston;
+    double bottomEdge = -(3*piston + params.bore);
+    double topEdge = piston + 4*valveHeight;
+    double axis = -2*piston - params.bore / 2;
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, -outsideEdge, bottomEdge));
+    data.add(QCPCurveData(pointIndex++, -outsideEdge, topEdge));
+    data.add(QCPCurveData(pointIndex++, outsideEdge, topEdge));
+    data.add(QCPCurveData(pointIndex++, outsideEdge, axis + piston / 2));
+    data.add(QCPCurveData(pointIndex++, insideEdge, axis + piston / 2));
+    data.add(QCPCurveData(pointIndex++, insideEdge, axis + params.bore / 2));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.botPort[1], 0));
+    data.add(QCPCurveData(pointIndex++, insideEdge, 0));
+    data.add(QCPCurveData(pointIndex++, insideEdge, topEdge - piston));
+    data.add(QCPCurveData(pointIndex++, -insideEdge, topEdge - piston));
+    data.add(QCPCurveData(pointIndex++, -insideEdge, 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.topPort[1], 0));
+    data.add(QCPCurveData(pointIndex++, -insideEdge, axis + params.bore / 2));
+    data.add(QCPCurveData(pointIndex++, -insideEdge, axis - params.bore / 2));
+    data.add(QCPCurveData(pointIndex++, insideEdge, axis - params.bore / 2));
+    data.add(QCPCurveData(pointIndex++, insideEdge, axis - piston/2));
+    data.add(QCPCurveData(pointIndex++, outsideEdge, axis - piston/2));
+    data.add(QCPCurveData(pointIndex++, outsideEdge, bottomEdge));
+    data.add(QCPCurveData(pointIndex++, -outsideEdge, bottomEdge));
+
+
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawCylinder2(){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double piston = params.stroke / 10;                       // value to use for the piston width/piston rod
+    double axis = -2*piston - params.bore / 2;
+    double outsideEdge = piston + (params.stroke + piston)/2;
+    double insideEdge = outsideEdge - piston;
+    double topPortWidth = params.valvePorts.topPort[0] - params.valvePorts.topPort[1];
+    double botPortWidth = params.valvePorts.botPort[1] - params.valvePorts.botPort[0];
+
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, -insideEdge + topPortWidth, axis + params.bore/2));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.topPort[0], 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[1], 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[1], -piston));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[0], -piston));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[0], 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.botPort[0], 0));
+    data.add(QCPCurveData(pointIndex++, insideEdge - botPortWidth , axis + params.bore/2));
+    data.add(QCPCurveData(pointIndex++, -insideEdge + topPortWidth, axis + params.bore/2));
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawPiston(double stroke){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double piston = params.stroke / 10;
+    double axis = -2*piston - params.bore / 2;
+    double leftEdge = -(params.stroke / 2) - piston/2;
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge, axis - params.bore/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge, axis + params.bore/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge + piston, axis + params.bore/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge + piston, axis + piston/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge + 4*piston + params.stroke, axis + piston/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge + 4*piston + params.stroke, axis - piston/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge + piston, axis - piston/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge + piston, axis - params.bore/2));
+    data.add(QCPCurveData(pointIndex++, stroke + leftEdge, axis - params.bore/2));
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawForwardShade(double stroke){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double piston = params.stroke / 10;
+    double axis = -2*piston - params.bore / 2;
+    double topPortWidth = params.valvePorts.topPort[0] - params.valvePorts.topPort[1];
+    double leftEdge = -(params.stroke / 2) - piston/2;
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, leftEdge, axis - params.bore/2));
+    data.add(QCPCurveData(pointIndex++, leftEdge, axis + params.bore/2));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.topPort[1], 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.topPort[0], 0));
+    data.add(QCPCurveData(pointIndex++, leftEdge + topPortWidth, axis + params.bore/2));
+    if (stroke + leftEdge > leftEdge){
+        data.add(QCPCurveData(pointIndex++, stroke + leftEdge, axis + params.bore/2));
+        data.add(QCPCurveData(pointIndex++, stroke + leftEdge, axis - params.bore/2));
+    }else{
+        data.add(QCPCurveData(pointIndex++, topPortWidth + leftEdge, axis + params.bore/2));
+        data.add(QCPCurveData(pointIndex++, topPortWidth + leftEdge, axis - params.bore/2));
+    }
+    data.add(QCPCurveData(pointIndex++, leftEdge, axis - params.bore/2));
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawReverseShade(double stroke){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double piston = params.stroke / 10;
+    double outsideEdge = piston + (params.stroke + piston)/2;
+    double insideEdge = outsideEdge - piston;
+    double axis = -2*piston - params.bore / 2;
+    double botPortWidth = params.valvePorts.botPort[1] - params.valvePorts.botPort[0];
+    double rightEdge = -(params.stroke / 2) + piston/2;
+    int pointIndex = 0;
+    if (stroke + rightEdge < insideEdge){
+        data.add(QCPCurveData(pointIndex++, stroke + rightEdge, axis - params.bore/2));
+     } else {
+        data.add(QCPCurveData(pointIndex++, insideEdge - botPortWidth, axis - params.bore/2));
+     }
+    data.add(QCPCurveData(pointIndex++, insideEdge, axis - params.bore/2));
+    data.add(QCPCurveData(pointIndex++, insideEdge, axis + params.bore/2));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.botPort[1], 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.botPort[0], 0));
+    data.add(QCPCurveData(pointIndex++, insideEdge - botPortWidth, axis + params.bore/2));
+    if (stroke + rightEdge < insideEdge){
+        data.add(QCPCurveData(pointIndex++, stroke + rightEdge, axis + params.bore/2));
+        data.add(QCPCurveData(pointIndex++, stroke + rightEdge, axis - params.bore/2));
+     } else {
+        data.add(QCPCurveData(pointIndex++, insideEdge - botPortWidth, axis + params.bore/2));
+        data.add(QCPCurveData(pointIndex++, insideEdge - botPortWidth, axis - params.bore/2));
+     }
+
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawValveShade(double offset){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double portsY = params.valveTravel / 4;
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.botLand[0], 0));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.topLand[0], 0));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.topLand[0], portsY));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.botLand[0], portsY));
+    data.add(QCPCurveData(pointIndex++, offset + params.valveSlide.botLand[0], 0));
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawSteamChestShade(){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double piston = params.stroke / 10;                       // value to use for the piston width/piston rod
+    double valveHeight = params.valveTravel/4;
+    double outsideEdge = piston + (params.stroke + piston)/2;
+    double insideEdge = outsideEdge - piston;
+    double topEdge = piston + 4*valveHeight;
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, -insideEdge, 0));
+    data.add(QCPCurveData(pointIndex++, -insideEdge, topEdge - piston));
+    data.add(QCPCurveData(pointIndex++, insideEdge, topEdge - piston));
+    data.add(QCPCurveData(pointIndex++, insideEdge, 0));
+    data.add(QCPCurveData(pointIndex++, -insideEdge, 0));
+    return data;
+}
+
+QCPDataContainer<QCPCurveData> MainWindow::drawExahustShade(){
+    QCPDataContainer<QCPCurveData> data;
+    auto params = _engine->getEngineParams();
+    double piston = params.stroke / 10;                       // value to use for the piston width/piston rod
+    double valveHeight = params.valveTravel/4;
+    double outsideEdge = piston + (params.stroke + piston)/2;
+    double insideEdge = outsideEdge - piston;
+    double topEdge = piston + 4*valveHeight;
+    int pointIndex = 0;
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[0], 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[1], 0));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[1], -piston));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[0], -piston));
+    data.add(QCPCurveData(pointIndex++, params.valvePorts.exPort[0], 0));
+
+    return data;
+}
