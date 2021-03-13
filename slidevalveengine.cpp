@@ -162,6 +162,7 @@ ErrorEnum SlideValveEngine::validateSettings(s_engineParams params)
     if (params.valvePorts.botPort[0] <= params.valvePorts.exPort[0])    // bot bridge is <=0
         return ErrorEnum::error;
 
+    // TODO: check for exahust restriction if exahust port is too narrow
 
     // check that critical points calculate ok
     ErrorEnum err = calcCriticalPoints(params);     // if this returns no error, critical points are updated

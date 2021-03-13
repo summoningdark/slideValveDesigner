@@ -33,6 +33,9 @@
           <property name="maximum">
            <double>9999.000000000000000</double>
           </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
           <property name="value">
            <double>20.375000000000000</double>
           </property>
@@ -45,6 +48,9 @@
           </property>
           <property name="maximum">
            <double>9999.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
           </property>
           <property name="value">
            <double>0.655000000000000</double>
@@ -60,6 +66,9 @@
         </item>
         <item row="1" column="5">
          <widget class="QDoubleSpinBox" name="bore">
+          <property name="singleStep">
+           <double>0.500000000000000</double>
+          </property>
           <property name="value">
            <double>7.000000000000000</double>
           </property>
@@ -69,6 +78,9 @@
          <widget class="QDoubleSpinBox" name="valveTopLand">
           <property name="decimals">
            <number>3</number>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
           </property>
           <property name="value">
            <double>1.270000000000000</double>
@@ -141,6 +153,9 @@
           <property name="maximum">
            <double>9999.000000000000000</double>
           </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
           <property name="value">
            <double>1.100000000000000</double>
           </property>
@@ -148,6 +163,9 @@
         </item>
         <item row="1" column="3">
          <widget class="QDoubleSpinBox" name="valveConRod">
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
           <property name="value">
            <double>22.000000000000000</double>
           </property>
@@ -178,6 +196,9 @@
           <property name="maximum">
            <double>9999.000000000000000</double>
           </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
           <property name="value">
            <double>2.281000000000000</double>
           </property>
@@ -201,6 +222,9 @@
           <property name="maximum">
            <double>9999.000000000000000</double>
           </property>
+          <property name="singleStep">
+           <double>0.500000000000000</double>
+          </property>
           <property name="value">
            <double>8.500000000000000</double>
           </property>
@@ -221,6 +245,9 @@
           <property name="decimals">
            <number>3</number>
           </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
           <property name="value">
            <double>1.440000000000000</double>
           </property>
@@ -233,6 +260,9 @@
           </property>
           <property name="maximum">
            <double>9999.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
           </property>
           <property name="value">
            <double>2.800000000000000</double>
@@ -251,6 +281,9 @@
         </item>
         <item row="4" column="3">
          <widget class="QDoubleSpinBox" name="valveWidth">
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
           <property name="value">
            <double>4.660000000000000</double>
           </property>

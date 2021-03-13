@@ -69,8 +69,17 @@ void MainWindow::updateEngineSettings()
         // Todo: error dialog
         _settingsOK = false;
     }
-    drawCycleDiagram();
-    drawValveDiagram();
+    if (ui->criticalPointSelect->currentIndex() != -1){
+        tracerPlot_ = drawCycleDiagram();
+        setCriticalPoint(ui->criticalPointSelect->currentIndex());
+    }else{
+        tracerPlot_ = drawCycleDiagram();
+        drawValveDiagram();
+        if (tracerPlot_ != -1){
+            ui->cyclePlot->graph(tracerPlot_)->setData(QVector<double>{currentCrank_}, QVector<double>{_engine->crank2Stroke(currentCrank_)});
+            ui->cyclePlot->replot();
+        }
+    }
 }
 
 void MainWindow::updateCurrentAngle(double deg)
@@ -320,9 +329,9 @@ int MainWindow::drawCycleDiagram()
     else
     {
         // todo put text on plot indicating invalid settings
-    }
-    ui->cyclePlot->replot();
-    return -1;
+        ui->cyclePlot->replot();
+        return -1;
+    }    
 }
 /********************************* methods to generate graphical paths for the simulation diagram ******************************************************/
 
