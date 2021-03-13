@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include <cmath>
+#include <algorithm>
 
 
 // valve measurements are from neutral position. neutral is positive direction form valve TDC
@@ -46,6 +47,8 @@ namespace SVE {
     double crank2Stroke(double deg, double stroke, double length);
     double stroke2Crank(double pos, double stroke, double length, bool ret);
     double addAngles(double deg1, double deg2);
+    bool comparePointsLT(std::pair<double, int> point1, std::pair<double, int> point2);
+    bool comparePointEQ(std::pair<double, int> point, double val);
 }
 
 /*!
@@ -61,6 +64,8 @@ public:
     ErrorEnum setEngineParams(s_engineParams newParams);        // Validates the new parameters, and only sets them if they are ok
     s_engineParams getEngineParams();    
 
+    std::array<double, 4> topCriticalPoints();
+    std::array<double, 4> botCriticalPoints();
     std::array<double, 8> criticalPoints();
 
     double crankInlet(bool ret);
@@ -73,10 +78,12 @@ public:
     double crank2ValvePos(double deg);
 
     // returns the cycle region corresponding to the crank position. if ret is true, calculates for return stroke.
-    CycleEnum crank2Cycle(double deg, bool ret);
+    CycleEnum crank2TopCycle(double deg);
+    CycleEnum crank2BotCycle(double deg);
 
-    // returns the first crank position > deg which is in the next cycle region
-    double nextCycle(double deg, bool ret);
+    // these functions return the next crank position after deg which hits a critical point
+    int nextTopCriticalPoint(double deg);       // returns the index of the next top critical point after deg
+    int nextBotCriticalPoint(double deg);       // returns the index of the next bottom critical point after deg
 
     // returns the volume swept by the piston during inlet. if ret is true gives value for return stroke
     double inletVolume(bool ret);
@@ -90,6 +97,8 @@ private:
     // the critical points only change when engine parameters change. no need to calculate them every time
     ErrorEnum calcCriticalPoints(s_engineParams params);    // uses passed in engine parameters, if no error is encountered, updates the internal critical point values
     ErrorEnum validateSettings(s_engineParams params);      // checks engine parameters for serious errors (like con rod shorter than stroke)
+    CycleEnum crank2Cycle(double deg, bool ret);
+    int nextPoint(double deg, std::array<double, 4> points);    // returns the index of the next point (with wrap). index is into <points>
     double _criticalPoints[8];
     double _forwardValveNeutral;                            // angular position of the eccentric when the valve is in the neutral position (1/2 its total travel)
     double _returnValveNeutral;                            // angular position of the eccentric when the valve is in the neutral position (1/2 its total travel)

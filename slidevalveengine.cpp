@@ -1,5 +1,13 @@
 #include "slidevalveengine.h"
 
+bool SVE::comparePointsLT(std::pair<double, int> point1, std::pair<double, int> point2){
+ return point1.first < point2.first;
+}
+
+bool comparePointEQ(std::pair<double, int> point, double val){
+    return point.first == val;
+}
+
 double SVE::deg2Rad(double deg)
 {
     return deg * M_PI / 180.0;
@@ -123,7 +131,7 @@ SlideValveEngine::SlideValveEngine(s_engineParams params)
         _engineParams.valvePorts.topPort[1] = -1.725;
         _engineParams.valvePorts.botPort[0] = 1.07;
         _engineParams.valvePorts.botPort[1] = 1.725;
-        _engineParams.valvePorts.exPort[0] = -.55;
+        _engineParams.valvePorts.exPort[0] = .55;
         _engineParams.valvePorts.exPort[1] = -.55;
         _engineParams.valveSlide.topLand[0] = -1.06;
         _engineParams.valveSlide.topLand[1] = -2.33;
@@ -141,7 +149,19 @@ ErrorEnum SlideValveEngine::validateSettings(s_engineParams params)
         return ErrorEnum::error;
     if (params.valveConRod <= params.valveTravel)
         return ErrorEnum::error;
-    // todo: more advanced checks
+
+    //valve porting checks
+    if (params.valvePorts.topPort[0] <= params.valvePorts.topPort[1])    // top port values reversed
+        return ErrorEnum::error;
+    if (params.valvePorts.exPort[0] <= params.valvePorts.exPort[1])      // exahust port values reversed
+        return ErrorEnum::error;
+    if (params.valvePorts.botPort[1] <= params.valvePorts.botPort[0])    // bot port values reversed
+        return ErrorEnum::error;
+    if (params.valvePorts.topPort[0] >= params.valvePorts.exPort[1])    // top bridge is <=0
+        return ErrorEnum::error;
+    if (params.valvePorts.botPort[0] <= params.valvePorts.exPort[0])    // bot bridge is <=0
+        return ErrorEnum::error;
+
 
     // check that critical points calculate ok
     ErrorEnum err = calcCriticalPoints(params);     // if this returns no error, critical points are updated
@@ -247,76 +267,29 @@ double SlideValveEngine::crank2ValvePos(double deg)
     return posFromTDC - (_engineParams.valveTravel/2.0);
 }
 
-/*!
- * Given a crank position(deg), calculates the smallest crank position > deg such that
- * crankCycle(new) follows crankRad2Cycle(deg).
- * \param deg crank position in degrees
- * \param ret if true calculates for return stroke
- * \return next crank position in radians
- */
+CycleEnum SlideValveEngine::crank2TopCycle(double deg){
+    return crank2Cycle(deg, false);
+}
 
-double SlideValveEngine::nextCycle(double deg, bool ret)
+CycleEnum SlideValveEngine::crank2BotCycle(double deg)
 {
-    return 0;
-/*
-    // get cycle region for the argument
-    CycleEnum oldCycle = crank2Cycle(deg, ret);
-    CycleEnum newCycle = CycleEnum::intake;
-
-    // get the next cycle information
-    std::array<double, 4> critP = criticalPoints(ret);
-    double nextPoint = 0;
-    switch(oldCycle){
-    case CycleEnum::intake:
-        newCycle = CycleEnum::expansion;
-        nextPoint = critP[1];
-        break;
-    case CycleEnum::expansion:
-        newCycle = CycleEnum::exahust;
-        nextPoint = critP[2];
-        break;
-    case CycleEnum::exahust:
-        newCycle = CycleEnum::compression;
-        nextPoint = critP[3];
-        break;
-    case CycleEnum::compression:
-        newCycle = CycleEnum::intake;
-        nextPoint = critP[0];
-        break;
-    }
-
-    // estimate the next position
-    double wrapped = SVE::addAngles(deg, 0);    // wrap crank position to 0..360
-
-    double nextPos;
-    if (wrapped < nextPoint)                        // wrapped crank position is before the next critical point
-        nextPos = deg + (nextPoint - wrapped);      // estimate by adding difference
-    else                                            // wrapped position is ahead of critical point ( occurs when next critical point is passed 0 from wrapped crank position
-        nextPos = deg + (360.0 - wrapped + nextPoint);
-
-    // verify that the new position will evaluate to the next cycle (in case double rounding errors get us)
-    CycleEnum testCycle = crank2Cycle(nextPos, ret);
-    if (testCycle == newCycle)                      // evaluates ok
-        return nextPos;
-    else if (testCycle == oldCycle)                 // a rounding error means the new point is still considered in the old cycle
-        while (crank2Cycle(nextPos, ret) != newCycle)
-            nextPos += .00027;                      // advance ~ 1arcsecond at a time until we reach the next cycle
-    else                                            // something went really wrong
-        throw;
-    return nextPos;
-*/
+    return crank2Cycle(deg, true);
 }
 
 CycleEnum SlideValveEngine::crank2Cycle(double deg, bool ret)
 {
     CycleEnum cycle = CycleEnum::intake;    
-    return cycle;
-/*
+
     // calculate wrapped angle
     double wrapped = SVE::addAngles(deg, 0);
 
     // compare with critical points to find region
-    std::array<double, 4> critP = criticalPoints(ret);
+    std::array<double, 4> critP;
+    if (ret)
+        critP = botCriticalPoints();
+    else
+        critP = topCriticalPoints();
+
     // find (crit - wrapped) for all crit (crit >=0 by definition)
     std::array<double, 4> diffs;
     for (int i=0; i<4; i++)
@@ -332,7 +305,7 @@ CycleEnum SlideValveEngine::crank2Cycle(double deg, bool ret)
         startPoint = 2;
     }else if (diffs[3] == 0){
         startPoint = 3;
-    }else if (diffs[1] > 0 && diffs[1] > 0 && diffs[2] > 0 && diffs[3] > 0){ // if all diff + choose largest
+    }else if (diffs[0] > 0 && diffs[1] > 0 && diffs[2] > 0 && diffs[3] > 0){ // if all diff + choose largest
         double maxDiff = 0;
         for (int i=0; i<4; i++){
             if (diffs[i] > maxDiff){
@@ -366,7 +339,33 @@ CycleEnum SlideValveEngine::crank2Cycle(double deg, bool ret)
     }
 
     return cycle;
-*/
+}
+
+int SlideValveEngine::nextTopCriticalPoint(double deg)
+{
+    return nextPoint(deg, topCriticalPoints());
+}
+
+int SlideValveEngine::nextBotCriticalPoint(double deg)
+{
+    return nextPoint(deg, botCriticalPoints());
+}
+
+int SlideValveEngine::nextPoint(double deg, std::array<double, 4> points){
+    std::array<std::pair<double, int>, 4> newPoints;                        // array of pairs to keep track of original index
+    newPoints[0] = std::make_pair(points[0], 0);
+    newPoints[1] = std::make_pair(points[1], 1);
+    newPoints[2] = std::make_pair(points[2], 2);
+    newPoints[3] = std::make_pair(points[3], 3);
+
+    std::sort(newPoints.begin(), newPoints.end(), SVE::comparePointsLT);                      // sort into acending order
+    double wrapped = SVE::addAngles(deg, 0);                                //get wrapped version of deg
+    for (int i=0; i<4; i++)                                                 // search the sorted points for the first larger than wrapped
+        if (newPoints[i].first > wrapped){                                  // found the next point
+            return newPoints[i].second;
+        }
+    // didn't find a next, must wrap around to the beginning
+    return newPoints[0].second;
 }
 
 double SlideValveEngine::crankInlet(bool ret)                              // returns the crank position when the steam port opens in radians. if ret is true, returns the value for the return stroke
@@ -401,9 +400,36 @@ double SlideValveEngine::crankCompression(bool ret)                        // re
         return _criticalPoints[3];
 }
 
+std::array<double, 4> SlideValveEngine::topCriticalPoints()
+{
+    std::array<double, 4> foo;
+    foo[0] = _criticalPoints[0];
+    foo[1] = _criticalPoints[1];
+    foo[2] = _criticalPoints[2];
+    foo[3] = _criticalPoints[3];
+    return foo;
+}
+
+std::array<double, 4> SlideValveEngine::botCriticalPoints()
+{
+    std::array<double, 4> foo;
+    foo[0] = _criticalPoints[4];
+    foo[1] = _criticalPoints[5];
+    foo[2] = _criticalPoints[6];
+    foo[3] = _criticalPoints[7];
+    return foo;
+}
+
 std::array<double, 8> SlideValveEngine::criticalPoints()
 {
     std::array<double, 8> foo;
-    std::copy(std::begin(_criticalPoints), std::end(_criticalPoints), std::begin(foo));
+    foo[0] = _criticalPoints[0];
+    foo[1] = _criticalPoints[1];
+    foo[2] = _criticalPoints[2];
+    foo[3] = _criticalPoints[3];
+    foo[4] = _criticalPoints[4];
+    foo[5] = _criticalPoints[5];
+    foo[6] = _criticalPoints[6];
+    foo[7] = _criticalPoints[7];
     return foo;
 }

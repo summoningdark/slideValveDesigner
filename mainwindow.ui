@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>848</width>
-    <height>654</height>
+    <width>1022</width>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -269,128 +269,165 @@
         <item row="1" column="0">
          <widget class="myCustomPlot" name="valvePlot" native="true"/>
         </item>
-        <item row="2" column="0">
-         <widget class="QGroupBox" name="groupBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="title">
-           <string>Position Control</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>Critical Point</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_11">
-             <property name="text">
-              <string>Current Crank Angle: </string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="4">
-            <layout class="QHBoxLayout" name="horizontalLayout">
-             <item>
-              <widget class="QLabel" name="label_14">
-               <property name="text">
-                <string>Crank -20</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSlider" name="animationSlider">
-               <property name="minimum">
-                <number>-20</number>
-               </property>
-               <property name="maximum">
-                <number>380</number>
-               </property>
-               <property name="value">
-                <number>-20</number>
-               </property>
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_15">
-               <property name="text">
-                <string>Crank 380</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="3">
-            <widget class="QComboBox" name="criticalPointSelect">
-             <item>
-              <property name="text">
-               <string>Forward Intake</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Forward Cutoff</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Forward Release</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Forward Compression</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Return Intake</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Return Cutoff</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Return Release</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Return Compression</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="currentAngle">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
        </layout>
       </widget>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>Position Control</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="4">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>Bottom State:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QLabel" name="bottomCycle">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="8">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>Crank -20</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="animationSlider">
+           <property name="minimum">
+            <number>-20</number>
+           </property>
+           <property name="maximum">
+            <number>380</number>
+           </property>
+           <property name="value">
+            <number>-20</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Crank 380</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="6">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Critical Point</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>Top State:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Current Crank Angle: </string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QComboBox" name="criticalPointSelect">
+         <item>
+          <property name="text">
+           <string>Forward Intake</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Forward Cutoff</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Forward Release</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Return Compression</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Return Intake</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Return Cutoff</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Return Release</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Forward Compression</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="topCycle">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QDoubleSpinBox" name="currentAngle">
+         <property name="minimum">
+          <double>-20.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>380.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
@@ -400,7 +437,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>848</width>
+     <width>1022</width>
      <height>22</height>
     </rect>
    </property>
@@ -455,8 +492,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>166</x>
-     <y>133</y>
+     <x>327</x>
+     <y>139</y>
     </hint>
     <hint type="destinationlabel">
      <x>308</x>
@@ -471,8 +508,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>166</x>
-     <y>229</y>
+     <x>327</x>
+     <y>216</y>
     </hint>
     <hint type="destinationlabel">
      <x>368</x>
@@ -487,8 +524,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>166</x>
-     <y>325</y>
+     <x>327</x>
+     <y>293</y>
     </hint>
     <hint type="destinationlabel">
      <x>508</x>
@@ -503,8 +540,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>166</x>
-     <y>421</y>
+     <x>327</x>
+     <y>370</y>
     </hint>
     <hint type="destinationlabel">
      <x>644</x>
@@ -519,8 +556,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>166</x>
-     <y>517</y>
+     <x>327</x>
+     <y>447</y>
     </hint>
     <hint type="destinationlabel">
      <x>638</x>
@@ -535,8 +572,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>437</x>
-     <y>133</y>
+     <x>672</x>
+     <y>139</y>
     </hint>
     <hint type="destinationlabel">
      <x>706</x>
@@ -551,8 +588,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>437</x>
-     <y>229</y>
+     <x>672</x>
+     <y>216</y>
     </hint>
     <hint type="destinationlabel">
      <x>750</x>
@@ -567,8 +604,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>437</x>
-     <y>325</y>
+     <x>672</x>
+     <y>293</y>
     </hint>
     <hint type="destinationlabel">
      <x>520</x>
@@ -583,8 +620,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>437</x>
-     <y>421</y>
+     <x>672</x>
+     <y>370</y>
     </hint>
     <hint type="destinationlabel">
      <x>226</x>
@@ -599,8 +636,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>437</x>
-     <y>517</y>
+     <x>672</x>
+     <y>447</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -615,8 +652,8 @@
    <slot>drawValveDiagram()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>815</x>
-     <y>574</y>
+     <x>1000</x>
+     <y>570</y>
     </hint>
     <hint type="destinationlabel">
      <x>423</x>
@@ -647,12 +684,12 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>706</x>
-     <y>133</y>
+     <x>1001</x>
+     <y>139</y>
     </hint>
     <hint type="destinationlabel">
      <x>819</x>
-     <y>-4</y>
+     <y>0</y>
     </hint>
    </hints>
   </connection>
@@ -663,8 +700,8 @@
    <slot>updateEngineSettings()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>706</x>
-     <y>229</y>
+     <x>1001</x>
+     <y>216</y>
     </hint>
     <hint type="destinationlabel">
      <x>844</x>
@@ -679,12 +716,28 @@
    <slot>setCriticalPoint(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>760</x>
-     <y>553</y>
+     <x>1000</x>
+     <y>570</y>
     </hint>
     <hint type="destinationlabel">
      <x>818</x>
      <y>24</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>currentAngle</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>currentAngleChanged(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>222</x>
+     <y>559</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>957</x>
+     <y>509</y>
     </hint>
    </hints>
   </connection>
@@ -695,5 +748,6 @@
   <slot>drawValveDiagram()</slot>
   <slot>sliderChanged(int)</slot>
   <slot>setCriticalPoint(int)</slot>
+  <slot>currentAngleChanged(double)</slot>
  </slots>
 </ui>

@@ -21,9 +21,9 @@ public:
 
     private slots:                
         void updateEngineSettings();
-        void drawValveDiagram();
-        void setAnimationSlider(double deg);
+        void drawValveDiagram();        
         void sliderChanged(int value);
+        void currentAngleChanged(double value);
         void setCriticalPoint(int value);
         void squarePlot(QCustomPlot *plot, QSize s);
 
@@ -31,18 +31,33 @@ private:
     Ui::MainWindow *ui;
     SlideValveEngine *_engine;
     double currentCrank_;                                   // holds current crank position for interactive plots
+    CycleEnum currentTopCycle_;
+    CycleEnum currentBotCycle_;
+    double currentStroke_;
+    double currentValvePos_;
     void drawCycleDiagram();
     std::map<CycleEnum, QBrush> _regionBrush;
     QPen _thickPen;
     bool _settingsOK;
-    QCPDataContainer<QCPCurveData> drawSlide(double offset);
-    QCPDataContainer<QCPCurveData> drawCylinder1();                     // generates curve data for the outer part of the cylinder
-    QCPDataContainer<QCPCurveData> drawCylinder2();                     // generates curve data for the inner part of the cylinder
-    QCPDataContainer<QCPCurveData> drawForwardShade(double stroke);     // draws a curve for shading the forward cylinder space given stroke (stroke is 0 at TDC)
-    QCPDataContainer<QCPCurveData> drawReverseShade(double stroke);     // draws a curve for shading the return cylinder space given stroke (stroke is 0 at TDC)
-    QCPDataContainer<QCPCurveData> drawPiston(double stroke);
-    QCPDataContainer<QCPCurveData> drawValveShade(double offset);          // draws curve for shading the interior of the valve given valve position (position is 0 at valve neutral)
-    QCPDataContainer<QCPCurveData> drawSteamChestShade();               // draws a curve for shading the interior of the steam chest
-    QCPDataContainer<QCPCurveData> drawExahustShade();
+
+    const std::map<CycleEnum, QString> cycleNames_{
+                                                   {CycleEnum::compression, "Compression"},
+                                                   {CycleEnum::exahust, "Exahust"},
+                                                   {CycleEnum::expansion, "Expansion"},
+                                                   {CycleEnum::intake, "intake"}
+                                                  };
+    void updateAnimationSlider(double deg);
+    void updateCurrentAngle(double deg);
+    void updateCriticalPoint(double deg);
+    void setCurrentCrank(double deg);
+    QCPDataContainer<QCPCurveData> drawSlide(double offset, double sizeParam);
+    QCPDataContainer<QCPCurveData> drawCylinder1(double outsideEdge, double insideEdge, double bottomEdge, double topEdge, double portWall, double piston);                     // generates curve data for the outer part of the cylinder
+    QCPDataContainer<QCPCurveData> drawCylinder2(double portWall, double insideEdge);                     // generates curve data for the inner part of the cylinder
+    QCPDataContainer<QCPCurveData> drawForwardShade(double stroke, double insideEdge, double portWall, double cylinderBottom, double pistonWidth);     // draws a curve for shading the forward cylinder space given stroke (stroke is 0 at TDC)
+    QCPDataContainer<QCPCurveData> drawReverseShade(double stroke, double insideEdge, double portWall, double cylinderBottom, double pistonWidth);     // draws a curve for shading the return cylinder space given stroke (stroke is 0 at TDC)
+    QCPDataContainer<QCPCurveData> drawPiston(double stroke, double portWall, double cylinderBottom, double pistonWidth);
+    QCPDataContainer<QCPCurveData> drawValveShade(double offset, double sizeParam);          // draws curve for shading the interior of the valve given valve position (position is 0 at valve neutral)
+    QCPDataContainer<QCPCurveData> drawSteamChestShade(double insideEdge, double steamChestTop);               // draws a curve for shading the interior of the steam chest
+    QCPDataContainer<QCPCurveData> drawExahustShade(double portWall);
 };
 #endif // MAINWINDOW_H
