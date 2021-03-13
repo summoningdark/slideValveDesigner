@@ -35,10 +35,11 @@ private:
     CycleEnum currentBotCycle_;
     double currentStroke_;
     double currentValvePos_;
-    void drawCycleDiagram();
+    int drawCycleDiagram();
     std::map<CycleEnum, QBrush> _regionBrush;
     QPen _thickPen;
     bool _settingsOK;
+    int tracerPlot_;
 
     const std::map<CycleEnum, QString> cycleNames_{
                                                    {CycleEnum::compression, "Compression"},

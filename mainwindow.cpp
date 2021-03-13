@@ -5,9 +5,10 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    tracerPlot_ = -1;
     _engine = new SlideValveEngine();
     currentCrank_ = 0;
+    ui->setupUi(this);
 
     // coloring brushes for cycle regions
     _regionBrush[CycleEnum::intake] = QBrush(QColor(0, 255, 0, 255));            // color for intake (dark green)
@@ -33,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->criticalPointSelect->setCurrentIndex(0);
     setCriticalPoint(0);
-    drawCycleDiagram();
+    tracerPlot_ = drawCycleDiagram();
     drawValveDiagram();
 }
 
@@ -100,6 +101,10 @@ void MainWindow::sliderChanged(int value)
     updateCriticalPoint(currentCrank_);
     updateCurrentAngle(currentCrank_);
     drawValveDiagram();
+    if (tracerPlot_ != -1){
+        ui->cyclePlot->graph(tracerPlot_)->setData(QVector<double>{currentCrank_}, QVector<double>{_engine->crank2Stroke(currentCrank_)});
+        ui->cyclePlot->replot();
+    }
 }
 
 void MainWindow::currentAngleChanged(double value)
@@ -108,6 +113,10 @@ void MainWindow::currentAngleChanged(double value)
     updateAnimationSlider(value);
     updateCriticalPoint(value);
     drawValveDiagram();
+    if (tracerPlot_ != -1){
+        ui->cyclePlot->graph(tracerPlot_)->setData(QVector<double>{currentCrank_}, QVector<double>{_engine->crank2Stroke(currentCrank_)});
+        ui->cyclePlot->replot();
+    }
 }
 
 void MainWindow::setCriticalPoint(int value)
@@ -116,6 +125,10 @@ void MainWindow::setCriticalPoint(int value)
     updateAnimationSlider(currentCrank_);
     updateCurrentAngle(currentCrank_);
     drawValveDiagram();
+    if (tracerPlot_ != -1){
+        ui->cyclePlot->graph(tracerPlot_)->setData(QVector<double>{currentCrank_}, QVector<double>{_engine->crank2Stroke(currentCrank_)});
+        ui->cyclePlot->replot();
+    }
 }
 
 void MainWindow::setCurrentCrank(double deg)
@@ -217,7 +230,7 @@ void MainWindow::drawValveDiagram()
     squarePlot(ui->valvePlot, ui->valvePlot->size());
 }
 
-void MainWindow::drawCycleDiagram()
+int MainWindow::drawCycleDiagram()
 {
     ui->cyclePlot->clearGraphs();
     ui->cyclePlot->clearItems();
@@ -293,13 +306,23 @@ void MainWindow::drawCycleDiagram()
             }
             ui->cyclePlot->graph(graphIndex)->setData(fX, fY);
         }
+
+        // Add tracer Graph
+        ui->cyclePlot->addGraph();      // add graph
+        graphIndex++;                   // count it
+        ui->cyclePlot->graph(graphIndex)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::red, Qt::white, 10));
+        ui->cyclePlot->graph(graphIndex)->setData(QVector<double>{currentCrank_}, QVector<double>{_engine->crank2Stroke(currentCrank_)});
+
         ui->cyclePlot->rescaleAxes();
+        ui->cyclePlot->replot();
+        return graphIndex;
     }
     else
     {
         // todo put text on plot indicating invalid settings
     }
     ui->cyclePlot->replot();
+    return -1;
 }
 /********************************* methods to generate graphical paths for the simulation diagram ******************************************************/
 
